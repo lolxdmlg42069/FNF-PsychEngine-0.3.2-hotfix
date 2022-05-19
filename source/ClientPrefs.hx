@@ -1,9 +1,11 @@
 package;
 
+import flixel.util.FlxColor;
 import flixel.FlxG;
 import flixel.util.FlxSave;
 import flixel.input.keyboard.FlxKey;
 import flixel.graphics.FlxGraphic;
+import flixel.util.FlxColor;
 import Controls;
 
 class ClientPrefs {
@@ -26,13 +28,9 @@ class ClientPrefs {
 	public static var ghostTapping:Bool = false;
 	public static var hideTime:Bool = true;
 	//new settings added by me lol
-	public static var osubackgrounds:Bool = true;
 	public static var strumbackground:Bool = false;
-	public static var osubackalpha:Float = 0.5;
 	public static var verthealthbar:Bool = false;
 	public static var songbackgrounds:Bool = true;
-	public static var healthdecrease:Float = 0.008;
-	public static var osusongs:Bool = true;
 
 	//this got discontinued bc im really fucking stupid
 	public static var noteskin:String = 'NOTE_assets';
@@ -40,19 +38,29 @@ class ClientPrefs {
 	public static var fullscreenxd:Bool = false;
 	public static var cursongdif:String = "Hard";
 	public static var curmisssound:String = "missnotetouhou";
+	
+	//Read https://github.com/SanicBTW/FNF-PsychEngine-0.3.2-hotfix/issues/11
+	#if web
+	public static var notehitsound:Bool = false;
+	#else
 	public static var notehitsound:Bool = true;
+	#end
 	public static var notehitvolume:Float = 1;
 	
-	//planning into adding a keyboard overlay looks cool idk
+	//keyboard overlay stuff
 	public static var showkeyboardoverlay:Bool = true;
-	public static var keyboardoverlayalpha:Float = 1;
+	public static var keyboardoverlayALPHA:Float = 0.5;
+	public static var keyboardoverlayPOSITION:String = "Right";
+	//idk if its gonna work with flxcolor, if it doesnt then gonna use strings
+	public static var keyboardoverlayIDLECOLOR:FlxColor = FlxColor.GRAY;
+	public static var keyboardoverlayPRESSINGCOLOR:FlxColor = FlxColor.WHITE;
 
 	//some songs stuff
 	public static var nerfebolatimer:Bool = false;
-	public static var ignorepauseosutimer:Bool = false;
 	public static var onemisschirumiru:Bool = true;
 	public static var onemissdefeat:Bool = false;
 
+	//thought about adding 6k and that but im lazy
 	public static var defaultKeys:Array<FlxKey> = [
 		A, LEFT,			//Note Left
 		S, DOWN,			//Note Down
@@ -64,7 +72,7 @@ class ClientPrefs {
 		W, UP,				//UI Up
 		D, RIGHT,			//UI Right
 
-		R, NONE,			//Reset
+		NONE, NONE,			//Reset
 		SPACE, ENTER,		//Accept
 		BACKSPACE, ESCAPE,	//Back
 		ENTER, ESCAPE		//Pause
@@ -107,12 +115,8 @@ class ClientPrefs {
 		FlxG.save.data.imagesPersist = imagesPersist;
 		FlxG.save.data.ghostTapping = ghostTapping;
 		FlxG.save.data.hideTime = hideTime;
-		FlxG.save.data.osubackgrounds = osubackgrounds;
 		FlxG.save.data.strumbackground = strumbackground;
-		FlxG.save.data.osubackalpha = osubackalpha;
 		FlxG.save.data.songbackgrounds = songbackgrounds;
-		FlxG.save.data.healthdecrease = healthdecrease;
-		FlxG.save.data.osusongs = osusongs;
 		FlxG.save.data.noteskin = noteskin;
 		FlxG.save.data.fullscreenxd = fullscreenxd;
 		FlxG.save.data.cursongdif = cursongdif;
@@ -120,9 +124,13 @@ class ClientPrefs {
 		FlxG.save.data.notehitsound = notehitsound;
 		FlxG.save.data.notehitvolume = notehitvolume;
 		FlxG.save.data.nerfebolatimer = nerfebolatimer;
-		FlxG.save.data.ignorepauseosutimer = ignorepauseosutimer;
 		FlxG.save.data.onemisschirumiru = onemisschirumiru;
 		FlxG.save.data.onemissdefeat = onemissdefeat;
+		FlxG.save.data.showkeyboardoverlay = showkeyboardoverlay;
+		FlxG.save.data.keyboardoverlayALPHA = keyboardoverlayALPHA;
+		FlxG.save.data.keyboardoverlayPOSITION = keyboardoverlayPOSITION;
+		FlxG.save.data.keyboardoverlayIDLECOLOR = keyboardoverlayIDLECOLOR;
+		FlxG.save.data.keyboardoverlayPRESSINGCOLOR = keyboardoverlayPRESSINGCOLOR;
 
 		var achieves:Array<String> = [];
 		for (i in 0...Achievements.achievementsUnlocked.length) {
@@ -204,28 +212,13 @@ class ClientPrefs {
 		if(FlxG.save.data.hideTime != null) {
 			hideTime = FlxG.save.data.hideTime;
 		}
-		if(FlxG.save.data.osubackgrounds != null){
-			osubackgrounds = FlxG.save.data.osubackgrounds;
-		}
 
 		if (FlxG.save.data.strumbackground != null){
 			strumbackground = FlxG.save.data.strumbackground;
 		}
 
-		if (FlxG.save.data.osubackalpha != null) {
-			osubackalpha = FlxG.save.data.osubackalpha;
-		}
-
 		if(FlxG.save.data.songbackgrounds != null) {
 			songbackgrounds = FlxG.save.data.songbackgrounds;
-		}
-
-		if (FlxG.save.data.healthdecrease != null) {
-			healthdecrease = FlxG.save.data.healthdecrease;
-		}
-
-		if (FlxG.save.data.osusongs != null){
-			osusongs = FlxG.save.data.osusongs;
 		}
 
 		if (FlxG.save.data.noteskin != null){
@@ -256,16 +249,32 @@ class ClientPrefs {
 			nerfebolatimer = FlxG.save.data.nerfebolatimer;
 		}
 
-		if (FlxG.save.data.ignorepauseosutimer != null){
-			ignorepauseosutimer = FlxG.save.data.ignorepauseosutimer;
-		}
-
 		if (FlxG.save.data.onemisschirumiru != null){
 			onemisschirumiru = FlxG.save.data.onemisschirumiru;
 		}
 
 		if (FlxG.save.data.onemissdefeat != null){
 			onemissdefeat = FlxG.save.data.onemissdefeat;
+		}
+
+		if (FlxG.save.data.showkeyboardoverlay != null){
+			showkeyboardoverlay = FlxG.save.data.showkeyboardoverlay;
+		}
+
+		if (FlxG.save.data.keyboardoverlayALPHA != null){
+			keyboardoverlayALPHA = FlxG.save.data.keyboardoverlayALPHA;
+		}
+
+		if (FlxG.save.data.keyboardoverlayPOSITION != null){
+			keyboardoverlayPOSITION = FlxG.save.data.keyboardoverlayPOSITION;
+		}
+
+		if (FlxG.save.data.keyboardoverlayIDLECOLOR != null){
+			keyboardoverlayIDLECOLOR = FlxG.save.data.keyboardoverlayIDLECOLOR;
+		}
+
+		if (FlxG.save.data.keyboardoverlayPRESSINGCOLOR != null){
+			keyboardoverlayPRESSINGCOLOR = FlxG.save.data.keyboardoverlayPRESSINGCOLOR;
 		}
 
 		var save:FlxSave = new FlxSave();

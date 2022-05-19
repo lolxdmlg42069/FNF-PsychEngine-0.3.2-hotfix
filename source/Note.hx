@@ -19,6 +19,7 @@ class Note extends FlxSprite
 	public var tooLate:Bool = false;
 	public var wasGoodHit:Bool = false;
 	public var ignoreNote:Bool = false;
+	public var hitByOpponent:Bool = false;
 	public var prevNote:Note;
 
 	public var sustainLength:Float = 0;
@@ -53,8 +54,8 @@ class Note extends FlxSprite
 					colorSwap.saturation = 0;
 					colorSwap.brightness = 0;
 					
-				case 4: //Warning Note for Accelerant
-					reloadNote('WARNING');
+				case 4: //Bullet Note for Accelerant
+					reloadNote('BULLET');
 					colorSwap.hue = 0;
 					colorSwap.saturation = 0;
 					colorSwap.brightness = 0;

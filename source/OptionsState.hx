@@ -24,6 +24,7 @@ import flixel.util.FlxTimer;
 import flixel.input.keyboard.FlxKey;
 import flixel.graphics.FlxGraphic;
 import Controls;
+import flixel.input.mouse.FlxMouseEventManager;
 
 using StringTools;
 
@@ -32,7 +33,8 @@ class OptionsState extends MusicBeatState
 {
 	//var options:Array<String> = ['Notes', 'Controls', 'Preferences'];
 	//var options:Array<String> = ['Controls', 'Preferences', 'Note Skins', 'Songs Difficulty', 'Miss Note Sound', 'Placeholder', 'Placeholder', 'Placeholder', 'Placeholder'];
-	var options:Array<String> = ['Controls', 'Preferences', 'Songs Difficulty', 'Miss Note Sound'];
+	//var options:Array<String> = ['Controls', 'Preferences', 'Songs Difficulty', 'Miss Note Sound'];
+	var options:Array<String> = ['Controls', 'Preferences', 'Songs Difficulty', 'Miss Note Sound', 'Keyboard Overlay Position', 'Keyboard Overlay Idle Color', 'Keyboard Overlay Pressing Color'];
 	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private static var curSelected:Int = 0;
 	public static var menuBG:FlxSprite;
@@ -76,6 +78,17 @@ class OptionsState extends MusicBeatState
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
+		if(FlxG.mouse.wheel != 0)
+		{
+			if(FlxG.mouse.wheel > 0)
+			{
+				changeSelection(-1);
+			}
+			else 
+			{
+				changeSelection(1);
+			}
+		}
 		if (controls.UI_UP_P) {
 			changeSelection(-1);
 		}
@@ -107,10 +120,18 @@ class OptionsState extends MusicBeatState
 					//openSubState(new NoteSkinsSubstate());
 
 				case 'Songs Difficulty':
-					openSubState(new DiffSongsSubstate());
+					openSubState(new DiffSongsSubstate(false));
 
 				case 'Miss Note Sound':
 					openSubState(new MissSoundSubstate());
+				
+				//new stuff
+				case 'Keyboard Overlay Position':
+					openSubState(new KBOLYPOSSubState());
+				case 'Keyboard Overlay Idle Color':
+					openSubState(new KBOLYIDLCOLORSubState());
+				case 'Keyboard Overlay Pressing Color':
+					openSubState(new KBOLYPRSCOLORSubState());
 			}
 		}
 	}
@@ -133,6 +154,411 @@ class OptionsState extends MusicBeatState
 				item.alpha = 1;
 			}
 		}
+	}
+}
+//taken from the code below lol
+class KBOLYPRSCOLORSubState extends MusicBeatSubstate
+{
+	private static var curSelected:Int = 0;
+	private var grpOptions:FlxTypedGroup<Alphabet>;
+	var leText:String;
+
+	var nextAccept:Int = 5;
+
+	var posX = 250;
+
+	//literally just the uhhh
+	var pressingcolors:Array<String> = [
+		'Gray',
+		'White',
+		'Black',
+		'Blue',
+		'Red',
+		'Green',
+		'Yellow',];
+	public function new() {
+		super();
+		grpOptions = new FlxTypedGroup<Alphabet>();
+		add(grpOptions);
+
+		for (i in 0...pressingcolors.length){
+			var isCentered:Bool = true;
+
+			var optionText:Alphabet = new Alphabet(0, (10 * i), pressingcolors[i], (!isCentered), false);
+			optionText.isMenuItem = true;
+
+			if(isCentered){
+				optionText.screenCenter(X);
+				//optionText.forceX = optionText.x;
+				optionText.forceX = 10;
+				//optionText.yAdd = -55;
+				optionText.yAdd = -260;
+			} else {
+				optionText.forceX = 200;
+			}
+			optionText.yMult = 60;
+			optionText.targetY = i;
+			grpOptions.add(optionText);
+
+		}
+
+		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0xFF000000);
+		textBG.alpha = 0.6;
+		add(textBG);
+
+		//this is really stupid lol
+		if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.GRAY){
+			leText = "Current Keyboard Overlay Pressing Color: Gray";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.WHITE){
+			leText = "Current Keyboard Overlay Pressing Color: White";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.BLACK){
+			leText = "Current Keyboard Overlay Pressing Color: Black";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.BLUE){
+			leText = "Current Keyboard Overlay Pressing Color: Blue";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.RED){
+			leText = "Current Keyboard Overlay Pressing Color: Red";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.GREEN){
+			leText = "Current Keyboard Overlay Pressing Color: Green";
+		} else if (ClientPrefs.keyboardoverlayPRESSINGCOLOR == FlxColor.YELLOW){
+			leText = "Current Keyboard Overlay Pressing Color: Yellow";
+		}
+
+		var text:FlxText = new FlxText(textBG.x, textBG.y + 4, FlxG.width, leText, 18);
+		text.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
+		text.scrollFactor.set();
+		add(text);
+		changeSelection();
+	}
+
+	override function update(elapsed:Float) {
+		if(controls.UI_UP_P){
+			changeSelection(-1);
+		}
+		if(controls.UI_DOWN_P){
+			changeSelection(1);
+		}
+
+		if (controls.BACK) {
+			grpOptions.forEachAlive(function(spr:Alphabet) {
+				spr.alpha = 0;
+			});
+			close();
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+
+		if(controls.ACCEPT && nextAccept <= 0){
+			switch(curSelected){
+				//this is really stupid too lol
+				case 0:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.GRAY;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 1:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.WHITE;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 2:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.BLACK;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 3:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.BLUE;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 4:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.RED;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 5:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.GREEN;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 6:
+					ClientPrefs.keyboardoverlayPRESSINGCOLOR = FlxColor.YELLOW;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+			}
+		}
+		if(nextAccept > 0) {
+			nextAccept -= 1;
+		}
+		super.update(elapsed);
+	}
+
+	function changeSelection(change:Int = 0){
+		curSelected += change;
+		if (curSelected < 0){
+			curSelected = pressingcolors.length - 1;
+		} 
+		if (curSelected >= pressingcolors.length){
+			curSelected = 0;
+		}
+
+		for(i in 0...grpOptions.length){
+			var item = grpOptions.members[i];
+			item.alpha = 0.4;
+			item.scale.set(1, 1);
+			if(curSelected == i){
+				item.alpha = 1;
+				item.scale.set(1.2, 1.2);
+			}
+		}
+		FlxG.sound.play(Paths.sound('scrollMenu'));
+	}
+}
+
+class KBOLYIDLCOLORSubState extends MusicBeatSubstate
+{
+	private static var curSelected:Int = 0;
+	private var grpOptions:FlxTypedGroup<Alphabet>;
+	var leText:String;
+
+	var nextAccept:Int = 5;
+
+	var posX = 250;
+
+	var idlecolors:Array<String> = [
+		'Gray',
+		'White',
+		'Black',
+		'Blue',
+		'Red',
+		'Green',
+		'Yellow',];
+	public function new() {
+		super();
+		grpOptions = new FlxTypedGroup<Alphabet>();
+		add(grpOptions);
+
+		for (i in 0...idlecolors.length){
+			var isCentered:Bool = true;
+
+			var optionText:Alphabet = new Alphabet(0, (10 * i), idlecolors[i], (!isCentered), false);
+			optionText.isMenuItem = true;
+
+			if(isCentered){
+				optionText.screenCenter(X);
+				//optionText.forceX = optionText.x;
+				optionText.forceX = 10;
+				//optionText.yAdd = -55;
+				//this took me 30 min to figure out the position of the thingy :skull:
+				optionText.yAdd = -260;
+			} else {
+				optionText.forceX = 200;
+			}
+			optionText.yMult = 60;
+			optionText.targetY = i;
+			grpOptions.add(optionText);
+
+		}
+
+		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0xFF000000);
+		textBG.alpha = 0.6;
+		add(textBG);
+
+		//this is really stupid lol
+		if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.GRAY){
+			leText = "Current Keyboard Overlay Idle Color: Gray";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.WHITE){
+			leText = "Current Keyboard Overlay Idle Color: White";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.BLACK){
+			leText = "Current Keyboard Overlay Idle Color: Black";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.BLUE){
+			leText = "Current Keyboard Overlay Idle Color: Blue";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.RED){
+			leText = "Current Keyboard Overlay Idle Color: Red";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.GREEN){
+			leText = "Current Keyboard Overlay Idle Color: Green";
+		} else if (ClientPrefs.keyboardoverlayIDLECOLOR == FlxColor.YELLOW){
+			leText = "Current Keyboard Overlay Idle Color: Yellow";
+		}
+
+		var text:FlxText = new FlxText(textBG.x, textBG.y + 4, FlxG.width, leText, 18);
+		text.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
+		text.scrollFactor.set();
+		add(text);
+		changeSelection();
+	}
+
+	override function update(elapsed:Float) {
+		if(controls.UI_UP_P){
+			changeSelection(-1);
+		}
+		if(controls.UI_DOWN_P){
+			changeSelection(1);
+		}
+
+		if (controls.BACK) {
+			grpOptions.forEachAlive(function(spr:Alphabet) {
+				spr.alpha = 0;
+			});
+			close();
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+
+		if(controls.ACCEPT && nextAccept <= 0){
+			switch(curSelected){
+				//this is really stupid too lol
+				case 0:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.GRAY;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 1:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.WHITE;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 2:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.BLACK;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 3:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.BLUE;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 4:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.RED;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 5:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.GREEN;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 6:
+					ClientPrefs.keyboardoverlayIDLECOLOR = FlxColor.YELLOW;
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+			}
+		}
+		if(nextAccept > 0) {
+			nextAccept -= 1;
+		}
+		super.update(elapsed);
+	}
+
+	function changeSelection(change:Int = 0){
+		curSelected += change;
+		if (curSelected < 0){
+			curSelected = idlecolors.length - 1;
+		} 
+		if (curSelected >= idlecolors.length){
+			curSelected = 0;
+		}
+
+		for(i in 0...grpOptions.length){
+			var item = grpOptions.members[i];
+			item.alpha = 0.4;
+			item.scale.set(1, 1);
+			if(curSelected == i){
+				item.alpha = 1;
+				item.scale.set(1.2, 1.2);
+			}
+		}
+		FlxG.sound.play(Paths.sound('scrollMenu'));
+	}
+}
+
+class KBOLYPOSSubState extends MusicBeatSubstate
+{
+	private static var curSelected:Int = 0;
+	private var grpOptions:FlxTypedGroup<Alphabet>;
+	var leText:String;
+
+	var nextAccept:Int = 5;
+
+	var posX = 250;
+
+	var keybooverpos:Array<String> = [
+		'Left',
+		'Right'];
+	public function new() {
+		super();
+		grpOptions = new FlxTypedGroup<Alphabet>();
+		add(grpOptions);
+
+		for (i in 0...keybooverpos.length){
+			var isCentered:Bool = true;
+
+			var optionText:Alphabet = new Alphabet(0, (10 * i), keybooverpos[i], (!isCentered), false);
+			optionText.isMenuItem = true;
+
+			if(isCentered){
+				optionText.screenCenter(X);
+				//optionText.forceX = optionText.x;
+				optionText.forceX = 10;
+				optionText.yAdd = -55;
+			} else {
+				optionText.forceX = 200;
+			}
+			optionText.yMult = 60;
+			optionText.targetY = i;
+			grpOptions.add(optionText);
+
+		}
+
+		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0xFF000000);
+		textBG.alpha = 0.6;
+		add(textBG);
+		leText = "Current Keyboard Overlay Position: " + ClientPrefs.keyboardoverlayPOSITION;
+		var text:FlxText = new FlxText(textBG.x, textBG.y + 4, FlxG.width, leText, 18);
+		text.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
+		text.scrollFactor.set();
+		add(text);
+		changeSelection();
+	}
+
+	override function update(elapsed:Float) {
+		if(controls.UI_UP_P){
+			changeSelection(-1);
+		}
+		if(controls.UI_DOWN_P){
+			changeSelection(1);
+		}
+
+		if (controls.BACK) {
+			grpOptions.forEachAlive(function(spr:Alphabet) {
+				spr.alpha = 0;
+			});
+			close();
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+
+		if(controls.ACCEPT && nextAccept <= 0){
+			switch(curSelected){
+				case 0:
+					ClientPrefs.keyboardoverlayPOSITION = "Left";
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+				case 1:
+					ClientPrefs.keyboardoverlayPOSITION = "Right";
+					FlxG.sound.play(Paths.sound('cancelMenu'));
+					close();
+			}
+		}
+		if(nextAccept > 0) {
+			nextAccept -= 1;
+		}
+		super.update(elapsed);
+	}
+
+	function changeSelection(change:Int = 0){
+		curSelected += change;
+		if (curSelected < 0){
+			curSelected = keybooverpos.length - 1;
+		} 
+		if (curSelected >= keybooverpos.length){
+			curSelected = 0;
+		}
+
+		for(i in 0...grpOptions.length){
+			var item = grpOptions.members[i];
+			item.alpha = 0.4;
+			item.scale.set(1, 1);
+			if(curSelected == i){
+				item.alpha = 1;
+				item.scale.set(1.2, 1.2);
+			}
+		}
+		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 }
 
@@ -249,7 +675,10 @@ class DiffSongsSubstate extends MusicBeatSubstate
 {
 	private static var curSelected:Int = 0;
 	private var grpOptions:FlxTypedGroup<Alphabet>;
+	private var infreeplay:Bool;
 	var leText:String;
+	var optionText:Alphabet; //tryin to add more funky clicky stuff
+	private static var menuBG:FlxSprite;
 
 	var nextAccept:Int = 5;
 
@@ -258,15 +687,27 @@ class DiffSongsSubstate extends MusicBeatSubstate
 	var availdiff:Array<String> = [
 		'Hard',
 		'Easy'];
-	public function new() {
+	public function new(infreeplay:Bool) {
 		super();
+		this.infreeplay = infreeplay;
+
+		if(infreeplay) {
+			menuBG = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+			menuBG.color = 0xFFea71fd;
+			menuBG.setGraphicSize(Std.int(menuBG.width * 1.1));
+			menuBG.updateHitbox();
+			menuBG.screenCenter();
+			menuBG.antialiasing = ClientPrefs.globalAntialiasing;
+			add(menuBG);
+		}
+
 		grpOptions = new FlxTypedGroup<Alphabet>();
 		add(grpOptions);
-
+		
 		for (i in 0...availdiff.length){
 			var isCentered:Bool = true;
 
-			var optionText:Alphabet = new Alphabet(0, (10 * i), availdiff[i], (!isCentered), false);
+			optionText = new Alphabet(0, (10 * i), availdiff[i], (!isCentered), false);
 			optionText.isMenuItem = true;
 
 			if(isCentered){
@@ -319,10 +760,18 @@ class DiffSongsSubstate extends MusicBeatSubstate
 				case 0:
 					ClientPrefs.cursongdif = "Hard";
 					FlxG.sound.play(Paths.sound('cancelMenu'));
+					if(infreeplay){
+						FreeplayState.RestartFreeplay();
+						FlxTween.tween(FlxG.sound, {volume: 1.0}, 0.5);
+					}
 					close();
 				case 1:
 					ClientPrefs.cursongdif = "Easy";
 					FlxG.sound.play(Paths.sound('cancelMenu'));
+					if(infreeplay){
+						FreeplayState.RestartFreeplay();
+						FlxTween.tween(FlxG.sound, {volume: 1.0}, 0.5);
+					}
 					close();
 			}
 		}
@@ -1010,50 +1459,44 @@ class PreferencesSubstate extends MusicBeatSubstate
 	static var unselectableOptions:Array<String> = [
 		'Graphics',
 		'Gameplay',
-		'OSU! Stuff',
 		'Songs',
 	];
 	static var noCheckbox:Array<String> = [
 		'Framerate',
 		'Note Delay',
-		'OSU! Back Alpha',
-		'Health Decrease',
 		'Note Hit Volume',
+		'Keyboard Overlay Alpha'
 	];
 
 	static var options:Array<String> = [
 		'Graphics',
-		//'Low Quality',
-		//'Anti-Aliasing',
+		'Low Quality',
+		'Anti-Aliasing',
 		//'Persistent Cached Data',
-		'Vertical Health Bar',
+		//'Vertical Health Bar',
 		'Song Backgrounds',
 		//'Fullscreen',
-		//'Strum Background',
+		'Strum Background',
 		#if !html5
 		'Framerate', //Apparently 120FPS isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		#end
 		'Gameplay',
 		'Downscroll',
-		//'Middlescroll',
+		'Middlescroll',
 		'Note Hit Sound',
 		'Note Hit Volume',
-		//'Ghost Tapping',
-		//'Note Delay',
-		//'Note Splashes',
-		//'Hide HUD',
-		//'Hide Song Length',
+		'Show Keyboard Overlay',
+		'Keyboard Overlay Alpha',
+		'Ghost Tapping',
+		'Note Delay',
+		'Note Splashes',
+		'Hide HUD',
+		'Hide Song Length',
 		//'Flashing Lights',
-		//'Camera Zooms',
+		'Camera Zooms',
 		#if !mobile
 		'FPS Counter',
 		#end
-		'OSU! Stuff',
-		'OSU! Songs',
-		'OSU! Backgrounds',
-		'OSU! Back Alpha',
-		'Health Decrease',
-		'Ignore Pause OSU! Timer',
 		'Songs',
 		'Pause Ebola Timer',
 		'One Miss Chirumiru',
@@ -1240,19 +1683,14 @@ class PreferencesSubstate extends MusicBeatSubstate
 					//case 'Hide Song Length':
 						//ClientPrefs.hideTime = !ClientPrefs.hideTime;
 
-					case 'OSU! Backgrounds':
-						ClientPrefs.osubackgrounds = !ClientPrefs.osubackgrounds;
 
-					case 'Vertical Health Bar':
-						ClientPrefs.verthealthbar = !ClientPrefs.verthealthbar;
+					//case 'Vertical Health Bar':
+						//ClientPrefs.verthealthbar = !ClientPrefs.verthealthbar;
 
 					case 'Song Backgrounds':
 						ClientPrefs.songbackgrounds = !ClientPrefs.songbackgrounds;
-					//case 'Strum Background':
-						//ClientPrefs.strumbackground = !ClientPrefs.strumbackground;
-
-					case 'OSU! Songs':
-						ClientPrefs.osusongs = !ClientPrefs.osusongs;
+					case 'Strum Background':
+						ClientPrefs.strumbackground = !ClientPrefs.strumbackground;
 					
 					/*
 					case 'Fullscreen':
@@ -1267,9 +1705,6 @@ class PreferencesSubstate extends MusicBeatSubstate
 					case 'Note Hit Sound':
 						ClientPrefs.notehitsound = !ClientPrefs.notehitsound;
 
-					case 'Ignore Pause OSU! Timer':
-						ClientPrefs.ignorepauseosutimer = !ClientPrefs.ignorepauseosutimer;
-
 					case 'Pause Ebola Timer':
 						ClientPrefs.nerfebolatimer = !ClientPrefs.nerfebolatimer;
 
@@ -1278,6 +1713,9 @@ class PreferencesSubstate extends MusicBeatSubstate
 
 					case 'One Miss Defeat':
 						ClientPrefs.onemissdefeat = !ClientPrefs.onemissdefeat;
+
+					case 'Show Keyboard Overlay':
+						ClientPrefs.showkeyboardoverlay = !ClientPrefs.showkeyboardoverlay;
 					
 				}
 				FlxG.sound.play(Paths.sound('scrollMenu'));
@@ -1309,23 +1747,16 @@ class PreferencesSubstate extends MusicBeatSubstate
 						if(ClientPrefs.noteOffset < 0) ClientPrefs.noteOffset = 0;
 						else if(ClientPrefs.noteOffset > 500) ClientPrefs.noteOffset = 500;
 
-					case 'OSU! Back Alpha':
-						var custmadd:Float = controls.UI_LEFT ? -0.1 : 0.1;
-						ClientPrefs.osubackalpha += custmadd;
-						if(ClientPrefs.osubackalpha < 0) ClientPrefs.osubackalpha = 0;
-						else if(ClientPrefs.osubackalpha > 1) ClientPrefs.osubackalpha = 1;
-					
-					case 'Health Decrease':
-						var custmaddh:Float = controls.UI_LEFT ? -0.001 : 0.001;
-						ClientPrefs.healthdecrease += custmaddh;
-						if(ClientPrefs.healthdecrease < 0.008) ClientPrefs.healthdecrease = 0.008;
-						else if (ClientPrefs.healthdecrease > 0.020) ClientPrefs.healthdecrease = 0.020;
-
 					case 'Note Hit Volume':
 						var custmadd:Float = controls.UI_LEFT ? -0.1 : 0.1;
 						ClientPrefs.notehitvolume += custmadd;
 						if(ClientPrefs.notehitvolume < 0.1) ClientPrefs.notehitvolume = 0.1;
 						else if (ClientPrefs.notehitvolume > 1) ClientPrefs.notehitvolume = 1;
+					case 'Keyboard Overlay Alpha':
+						var custmadd:Float = controls.UI_LEFT ? -0.1 : 0.1;
+						ClientPrefs.keyboardoverlayALPHA += custmadd;
+						if(ClientPrefs.keyboardoverlayALPHA < 0) ClientPrefs.keyboardoverlayALPHA = 0;
+						else if(ClientPrefs.keyboardoverlayALPHA > 1) ClientPrefs.keyboardoverlayALPHA = 1;
 				}
 				reloadValues();
 
@@ -1370,18 +1801,12 @@ class PreferencesSubstate extends MusicBeatSubstate
 				daText = "If checked, disables some background details,\ndecreases loading times and improves performance.";
 			case 'Persistent Cached Data':
 				daText = "If checked, images loaded will stay in memory\nuntil the game is closed, this increases memory usage,\nbut basically makes reloading times instant.";
-			case 'OSU! Backgrounds':
-				daText = "If unchecked, some songs will only have a black background\ninstead of their respective osu background";
 			case 'Vertical Health Bar':
 				daText = "The name says it all, vertical health bar";
 			case 'Song Backgrounds':
 				daText = "If unchecked no backgrounds or players will be displayed\nOnly song, strum line and health bar\nDOESN'T WORK ATM";
-			case 'Health Decrease':
-				daText = "The health decrease value,\nif higher the health will decrease faster\nif lower it will do the opposite";
-			case 'OSU! Songs':
-				daText = "Shows the OSU! Songs that are in the game\nif disabled it will hide them";
-			//case 'Strum Background':
-				//daText = "If checked, a grey smth background will appear under the player strums\nto give it more an osu! look i guess";
+			case 'Strum Background':
+				daText = "If checked, a grey smth background will appear under the player strums\nto give it more an osu! look i guess";
 			case 'Anti-Aliasing':
 				daText = "If unchecked, disables anti-aliasing, increases performance\nat the cost of the graphics not looking as smooth.";
 			case 'Downscroll':
@@ -1410,15 +1835,16 @@ class PreferencesSubstate extends MusicBeatSubstate
 				daText = "Plays a hit sound when hitting a note";
 			case 'Note Hit Volume':
 				daText = "Literally the note hit volume";
-			case 'Ignore Pause OSU! Timer':
-				//Don't ask why
-				daText = "It ignores the pause screen on osu songs\nbasically continues decreasing life\ndont ask why i did this";
 			case 'Pause Ebola Timer':
 				daText = "It pauses the ebola timer from infinigger when pausing the game";
 			case 'One Miss Chirumiru':
 				daText = "Literally what the name says";
 			case 'One Miss Defeat':
 				daText = "Literally what the name says";
+			case 'Show Keyboard Overlay':
+				daText = "Shows a lil keyboard overlay at the right corner of the screen\ngonna add an option to change the pos of it";
+			case 'Keyboard Overlay Alpha':
+				daText = "Changes the alpha value of the keyboard overlay";
 		}
 		descText.text = daText;
 
@@ -1500,32 +1926,26 @@ class PreferencesSubstate extends MusicBeatSubstate
 						daValue = ClientPrefs.hideHud;
 					case 'Persistent Cached Data':
 						daValue = ClientPrefs.imagesPersist;
-					case 'OSU! Backgrounds':
-						daValue = ClientPrefs.osubackgrounds;
 					case 'Vertical Health Bar':
 						daValue = ClientPrefs.verthealthbar;
 					case 'Song Backgrounds':
 						daValue = ClientPrefs.songbackgrounds;
-					case 'OSU! Songs':
-						daValue = ClientPrefs.osusongs;
 					case 'Fullscreen':
 						daValue = ClientPrefs.fullscreenxd;
-					/*
 					case 'Strum Background':
 						daValue = ClientPrefs.strumbackground;
-						*/
 					//case 'Hide Song Length':
 						//daValue = ClientPrefs.hideTime;
 					case 'Note Hit Sound':
 						daValue = ClientPrefs.notehitsound;
-					case 'Ignore Pause OSU! Timer':
-						daValue = ClientPrefs.ignorepauseosutimer;
 					case 'Pause Ebola Timer':
 						daValue = ClientPrefs.nerfebolatimer;
 					case 'One Miss Chirumiru':
 						daValue = ClientPrefs.onemisschirumiru;
 					case 'One Miss Defeat':
 						daValue = ClientPrefs.onemissdefeat;
+					case 'Show Keyboard Overlay':
+						daValue = ClientPrefs.showkeyboardoverlay;
 				}
 				checkbox.daValue = daValue;
 			}
@@ -1539,12 +1959,10 @@ class PreferencesSubstate extends MusicBeatSubstate
 						daText = '' + ClientPrefs.framerate;
 					case 'Note Delay':
 						daText = ClientPrefs.noteOffset + 'ms';
-					case 'OSU! Back Alpha':
-						daText = '' + ClientPrefs.osubackalpha;
-					case 'Health Decrease':
-						daText = '' + ClientPrefs.healthdecrease;
 					case 'Note Hit Volume':
 						daText = '' + ClientPrefs.notehitvolume;
+					case 'Keyboard Overlay Alpha':
+						daText = '' + ClientPrefs.keyboardoverlayALPHA;
 				}
 				var lastTracker:FlxSprite = text.sprTracker;
 				text.sprTracker = null;

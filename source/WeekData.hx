@@ -4,37 +4,27 @@ class WeekData {
 	//Song names, used on both Story Mode and Freplay
 	//Go to FreeplayState.hx and add the head icons
 	//Go to StoryMenuState.hx and add the characters/backgrounds
+
+	//Made a new branch that will contain only the osu songs, the master branch will only have mod songs 
+	//Its to make the loading times shorter ig
+	//Theres only like a couple of songs that has scores working wtf :skull:
 	public static var songsNames:Array<Dynamic> = [
 		['Tutorial'],
 
-		['rumias-theme', 'amaze-meisakura', 'potential-curve'],
-		['equilibrium', 'four-veiled-stars', 'crossing-delta'],
-		['cirnos-perfect-math-class'],
-
 		['chirumiru', 'defeat', 'split'],
 		['foolhardy', 'bushwhack', 'accelerant'],
 		['infinigger', 'target-practice', 'sporting'],
-	];
-
-	public static var noosusongNames:Array<Dynamic> = [
-		['Tutorial'],
-
-		[],
-		[],
-		[],
-
-		['chirumiru', 'defeat', 'split'],
-		['foolhardy', 'bushwhack', 'accelerant'],
-		['infinigger', 'target-practice', 'sporting'],
+		['termination', 'bullet-note-tst', 'monochrome'],
+		['8-28-63', 'expurgation', 'erect-dadbattle'],
+		['erect-south']
 	];
 
 	public static var easysongNames:Array<Dynamic> = [
 		['Tutorial'],
-
+		
 		[],
 		[],
 		[],
-
 		[],
 		[],
 		[],

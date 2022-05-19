@@ -1,5 +1,6 @@
 package;
 
+import OptionsState.DiffSongsSubstate;
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -16,6 +17,7 @@ import flixel.tweens.FlxTween;
 import lime.utils.Assets;
 import flixel.system.FlxSound;
 import openfl.utils.Assets as OpenFlAssets;
+import flixel.input.mouse.FlxMouseEventManager;
 
 using StringTools;
 
@@ -24,30 +26,15 @@ class FreeplayState extends MusicBeatState
 	//Character head icons for your songs
 	static var songsHeads:Array<Dynamic> = [
 
-		['osubruh', 'osubruh', 'osubruh'], //osu songs
-		['osubruh', 'osubruh', 'osubruh'], //more osu ig
-		['osubruh', ], //more osu sorry
-
 		['cirno', 'black', 'bf'], //chirumiru, defeat, split
 		['zardyMyBeloved', 'zardyButDARK', 'hank'], //foolhardy, bushwhack, accelerant
 		['cancer', 'matt', 'matt',], // infinigger, target practice, sporting
-	];
-
-	static var noosusongHeads:Array<Dynamic> = [
-		[],
-		[],
-		[],
-
-		['cirno', 'black', 'bf'], //chirumiru, defeat, split
-		['zardyMyBeloved', 'zardyButDARK', 'hank'], //foolhardy, bushwhack, accelerant
-		['cancer', 'matt', 'matt'], // infinigger, target practice, sporting
+		['bf', 'hank', 'gold'], //termination, bullet note test, monochrome
 	];
 
 	static var easysongHeads:Array<Dynamic> = [
-		[],
-		[],
-		[],
 
+		[],
 		[],
 		[],
 		[],
@@ -80,6 +67,9 @@ class FreeplayState extends MusicBeatState
 	var intendedColor:Int;
 	var colorTween:FlxTween;
 
+	var pritext:FlxText;
+	var secondtext:FlxText;
+	
 	override function create()
 	{
 		transIn = FlxTransitionableState.defaultTransIn;
@@ -114,21 +104,12 @@ class FreeplayState extends MusicBeatState
 
 		//meh it was mainly for a friend but i find this extremely stupid from my side lol
 		if(ClientPrefs.cursongdif == "Hard"){
-			if(ClientPrefs.osusongs){
-				for (i in 1...WeekData.songsNames.length) {
-					#if !debug
-					if (StoryMenuState.weekUnlocked[i])
-					#end
-						addWeek(WeekData.songsNames[i], i, songsHeads[i-1]);
-				}
-			} else {
-				for (i in 1...WeekData.noosusongNames.length) {
-					#if !debug
-					if (StoryMenuState.weekUnlocked[i])
-					#end
-						addWeek(WeekData.noosusongNames[i], i, noosusongHeads[i-1]);
-				}
-			}	
+			for (i in 1...WeekData.songsNames.length) {
+				#if !debug
+				if (StoryMenuState.weekUnlocked[i])
+				#end
+					addWeek(WeekData.songsNames[i], i, songsHeads[i-1]);
+			}
 		} else if (ClientPrefs.cursongdif == "Easy") {
 			for (i in 1...WeekData.easysongNames.length) {
 				#if !debug
@@ -184,7 +165,7 @@ class FreeplayState extends MusicBeatState
 		//bg.color = songs[curSelected].color;
 		intendedColor = bg.color;
 		changeSelection();
-		//changeDiff();
+		changeDiff();
 
 		var swag:Alphabet = new Alphabet(1, 0, "swag");
 
@@ -218,46 +199,19 @@ class FreeplayState extends MusicBeatState
 		var leText:String = "Press RESET to Reset your Score and Accuracy. ";
 		#end*/
 
-		//this is really stupid too 
-		if (ClientPrefs.osusongs){
-			if(ClientPrefs.cursongdif == "Hard"){
-				var prileText:String = "Press RESET to Reset your Score and Accuracy.";
-				var pritext:FlxText = new FlxText(primtextBG.x, primtextBG.y + 4, FlxG.width, prileText, 18);
-				pritext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-				pritext.scrollFactor.set();
-				add(pritext);
-	
-				var secondleText:String = "Current Difficulty: " + ClientPrefs.cursongdif + " / OSU! Songs are enabled  / You can change this in settings";
-				var secondtext:FlxText = new FlxText(secondtextBG.x, secondtextBG.y + 4, FlxG.width, secondleText, 18);
-				secondtext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-				secondtext.scrollFactor.set();
-				add(secondtext);
-			} else if (ClientPrefs.cursongdif == "Easy") {
-				var prileText:String = "Press RESET to Reset your Score and Accuracy.";
-				var pritext:FlxText = new FlxText(primtextBG.x, primtextBG.y + 4, FlxG.width, prileText, 18);
-				pritext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-				pritext.scrollFactor.set();
-				add(pritext);
-	
-				var secondleText:String = "Current Difficulty: " + ClientPrefs.cursongdif + " / OSU! Songs are enabled (Not showing)  / You can change this in settings";
-				var secondtext:FlxText = new FlxText(secondtextBG.x, secondtextBG.y + 4, FlxG.width, secondleText, 18);
-				secondtext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-				secondtext.scrollFactor.set();
-				add(secondtext);
-			}
-		} else {
-			var prileText:String = "Press RESET to Reset your Score and Accuracy.";
-			var pritext:FlxText = new FlxText(primtextBG.x, primtextBG.y + 4, FlxG.width, prileText, 18);
-			pritext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-			pritext.scrollFactor.set();
-			add(pritext);
+		var prileText:String = "Press RESET to Reset your Score and Accuracy.";
+		pritext = new FlxText(primtextBG.x, primtextBG.y + 4, FlxG.width, prileText, 18);
+		pritext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
+		pritext.scrollFactor.set();
+		pritext.updateHitbox();
+		add(pritext);
 
-			var secondleText:String = "Current Difficulty: " + ClientPrefs.cursongdif + " / You can change this in settings";
-			var secondtext:FlxText = new FlxText(secondtextBG.x, secondtextBG.y + 4, FlxG.width, secondleText, 18);
-			secondtext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
-			secondtext.scrollFactor.set();
-			add(secondtext);
-		}
+		var secondleText:String = "Current Difficulty: " + ClientPrefs.cursongdif + " / Click this to change the diff";
+		secondtext = new FlxText(secondtextBG.x, secondtextBG.y + 4, FlxG.width, secondleText, 18);
+		secondtext.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT);
+		secondtext.scrollFactor.set();
+		secondtext.updateHitbox();
+		add(secondtext);
 
 		super.create();
 	}
@@ -309,7 +263,6 @@ class FreeplayState extends MusicBeatState
 		#else
 		scoreText.text = 'PERSONAL BEST: ' + lerpScore;
 		#end
-		//scoreText.text = 'No carga scores a partir de las 4 canciones bruh\npereza de meter mas weeks para cargar esto xd';
 
 		positionHighscore();
 
@@ -327,12 +280,6 @@ class FreeplayState extends MusicBeatState
 			changeSelection(1);
 		}
 
-		/*
-		if (controls.UI_LEFT_P)
-			changeDiff(-1);
-		if (controls.UI_RIGHT_P)
-			changeDiff(1);
-		*/ 
 		if (controls.BACK)
 		{
 			if(colorTween != null) {
@@ -366,10 +313,10 @@ class FreeplayState extends MusicBeatState
 			var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
 			if(!OpenFlAssets.exists(Paths.json(songLowercase + '/' + poop))) {
 				poop = songLowercase;
-				curDifficulty = 1;
 				trace('Couldnt find file');
 			}
 			trace(poop);
+			trace(curDifficulty);
 
 			PlayState.SONG = Song.loadFromJson(poop, songLowercase);
 			PlayState.isStoryMode = false;
@@ -382,15 +329,21 @@ class FreeplayState extends MusicBeatState
 			}
 			LoadingState.loadAndSwitchState(new PlayState());
 
-			FlxG.sound.music.volume = 0;
-					
 			destroyFreeplayVocals();
 		}
 		else if(controls.RESET)
 		{
 			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));
 			FlxG.sound.play(Paths.sound('scrollMenu'));
+			FlxTween.tween(FlxG.sound, {volume: 0.3}, 0.5);
 		}
+		/*
+		else if(FlxG.mouse.overlaps(secondtext) && FlxG.mouse.justPressed)
+		{
+			openSubState(new DiffSongsSubstate(true));
+			FlxG.sound.play(Paths.sound('scrollMenu'));
+			FlxTween.tween(FlxG.sound, {volume: 0.3}, 0.5);
+		}*/
 		super.update(elapsed);
 	}
 
@@ -400,6 +353,12 @@ class FreeplayState extends MusicBeatState
 			vocals.destroy();
 		}
 		vocals = null;
+	}
+
+	public static function RestartFreeplay() {
+		//I'm extremely sorry
+		MusicBeatState.resetState();
+		//MusicBeatState.switchState(new FreeplayState());
 	}
 
 	function changeDiff(change:Int = 0)
